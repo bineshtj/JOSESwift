@@ -1,6 +1,33 @@
 ![JOSESwift](logo/JOSESwift-full.svg)
 
 <br>
+*EDIT*: Changes have been made to include CryptoSwift and JOSE-ECDH-ES-Swift to add support for A128GCM.
+*JOSESwift*:
+renamed file:    JOSESwift/Sources/CryptoImplementation/AES.swift -> JOSESwift/Sources/CryptoImplementation/JoseAES.swift
+renamed file:    JOSESwift/Sources/CryptoImplementation/HMAC.swift -> JOSESwift/Sources/CryptoImplementation/JoseHMAC.swift
+followed by:
+refactor renamed: struct AES -> struct JoseAes
+refactor renamed: struct HMAC -> struct JoseHMAC
+which affected files:
+JOSESwift/Sources/AESDecrypter.swift
+JOSESwift/Sources/AESEncrypter.swift
+JOSESwift/Sources/CryptoImplementation/JoseAES.swift
+JOSESwift/Sources/CryptoImplementation/JoseHMAC.swift
+
+*JOSE-ECDH-ES-Swift*:
+renamed:    ECDHESSwift/Classes/JWA/Hash.swift -> ECDHESSwift/Classes/JWA/JWAHash.swift
+renamed:    ECDHESSwift/Classes/JWE/JWE.swift -> ECDHESSwift/Classes/JWE/JWE2.swift
+renamed:    ECDHESSwift/Classes/JWE/JWEHeader.swift -> ECDHESSwift/Classes/JWE/JWEHeader2.swift
+renamed:    ECDHESSwift/Classes/JWK.swift -> ECDHESSwift/Classes/JWK2.swift
+followed by:
+refactor renamed: enum Hash -> enum JWAHash
+which affected files:
+ECDHESSwift/Classes/JWA/AesCbcHmacSha2.swift
+ECDHESSwift/Classes/JWA/Algorithm.swift
+ECDHESSwift/Classes/JWA/ConcatKdf.swift
+ECDHESSwift/Classes/JWA/ECDHKeyAgreement.swift
+and also removed import statements of JOSESwift from various classes of JOSE-ECDH-ES-Swift.
+Credits for the libraries used goes to their respective owners. Please read the licenses of those projects before including this library.
 
 **JOSESwift** is a modular and extensible framework for the [JOSE](https://datatracker.ietf.org/wg/jose/about/) standards [**JWS**](https://tools.ietf.org/html/rfc7515), [**JWE**](https://tools.ietf.org/html/rfc7516), and [**JWK**](https://tools.ietf.org/html/rfc7517) written in Swift. 
 As of now, its usage is limited to iOS because it relies on the iOS cryptography frameworks.

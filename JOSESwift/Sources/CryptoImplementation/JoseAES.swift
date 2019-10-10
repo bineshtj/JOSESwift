@@ -53,7 +53,7 @@ fileprivate extension SymmetricKeyAlgorithm {
     }
 }
 
-internal struct AES {
+internal struct JoseAES {
     typealias KeyType = Data
 
     /// Encrypts a plain text using a given `AES` algorithm, the corresponding symmetric key and an initialization vector.
