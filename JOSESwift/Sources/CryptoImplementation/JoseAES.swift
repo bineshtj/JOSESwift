@@ -39,6 +39,9 @@ fileprivate extension SymmetricKeyAlgorithm {
 
         case .A128CBCHS256:
             return CCAlgorithm(kCCAlgorithmAES128)
+            
+        case .A128GCM:
+            return CCAlgorithm(kCCAlgorithmAES128)
         }
     }
 
@@ -48,6 +51,9 @@ fileprivate extension SymmetricKeyAlgorithm {
             return key.count == kCCKeySizeAES256
 
         case .A128CBCHS256:
+            return key.count == kCCKeySizeAES128
+            
+        case .A128GCM:
             return key.count == kCCKeySizeAES128
         }
     }
@@ -85,6 +91,7 @@ internal struct JoseAES {
             }
 
             return encrypted.data
+        case .A128GCM: fatalError("Not implemented. Refactor code.")
         }
     }
 
@@ -117,6 +124,8 @@ internal struct JoseAES {
             }
 
             return decrypted.data
+            
+        case .A128GCM: fatalError("Not implemented. Refactor code.")
         }
     }
 

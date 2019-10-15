@@ -49,6 +49,7 @@ internal protocol SymmetricEncrypter {
     /// - Returns: The a `SymmetricEncryptionContext` containing the ciphertext, the authentication tag and the initialization vector.
     /// - Throws: `JWEError` if any error occured during encryption.
     func encrypt(_ plaintext: Data, with symmetricKey: Data, additionalAuthenticatedData: Data) throws -> SymmetricEncryptionContext
+    func encryptForGCM(_ plaintext: Data, with symmetricKey: Data, additionalAuthenticatedData: Data) throws -> SymmetricEncryptionContext
 }
 
 public struct EncryptionContext {
@@ -81,14 +82,14 @@ public struct Encrypter<KeyType> {
     public init?(keyEncryptionAlgorithm: AsymmetricKeyAlgorithm, encryptionKey key: KeyType, contentEncyptionAlgorithm: SymmetricKeyAlgorithm) {
         // TODO: This switch won't scale. We need to refactor it. (#141)
         switch (keyEncryptionAlgorithm, contentEncyptionAlgorithm) {
-        case (.RSA1_5, .A256CBCHS512), (.RSAOAEP, .A256CBCHS512), (.RSAOAEP256, .A256CBCHS512), (.RSA1_5, .A128CBCHS256), (.RSAOAEP, .A128CBCHS256), (.RSAOAEP256, .A128CBCHS256):
+        case (.RSA1_5, .A256CBCHS512), (.RSAOAEP, .A256CBCHS512), (.RSAOAEP256, .A256CBCHS512), (.RSA1_5, .A128CBCHS256), (.RSAOAEP, .A128CBCHS256), (.RSAOAEP256, .A128CBCHS256), (.RSA1_5, .A128GCM), (.RSAOAEP, .A128GCM), (.RSAOAEP256, .A128GCM):
             guard type(of: key) is RSAEncrypter.KeyType.Type else {
                 return nil
             }
             // swiftlint:disable:next force_cast
             self.asymmetric = RSAEncrypter(algorithm: keyEncryptionAlgorithm, publicKey: (key as! RSAEncrypter.KeyType))
             self.symmetric = AESEncrypter(algorithm: contentEncyptionAlgorithm)
-        case (.direct, .A256CBCHS512), (.direct, .A128CBCHS256):
+        case (.direct, .A256CBCHS512), (.direct, .A128CBCHS256), (.direct, .A128GCM):
             guard type(of: key) is AESEncrypter.KeyType.Type else {
                 return nil
             }
@@ -123,17 +124,32 @@ public struct Encrypter<KeyType> {
         let cek = try symmetric.symmetricKey ?? SecureRandom.generate(count: enc.keyLength)
 
         let encryptedKey = try asymmetric.encrypt(cek)
-        let symmetricContext = try symmetric.encrypt(
-            payload.data(),
-            with: cek,
-            additionalAuthenticatedData: header.data().base64URLEncodedData()
-        )
-
-        return EncryptionContext(
-            encryptedKey: encryptedKey,
-            ciphertext: symmetricContext.ciphertext,
-            authenticationTag: symmetricContext.authenticationTag,
-            initializationVector: symmetricContext.initializationVector
-        )
+        if(enc == .A128GCM) {
+            let symmetricContext = try symmetric.encryptForGCM(
+                payload.data(),
+                with: cek,
+                additionalAuthenticatedData: header.data().base64URLEncodedData()
+            )
+            
+            return EncryptionContext(
+                encryptedKey: encryptedKey,
+                ciphertext: symmetricContext.ciphertext,
+                authenticationTag: symmetricContext.authenticationTag,
+                initializationVector: symmetricContext.initializationVector
+            )
+        } else {
+            let symmetricContext = try symmetric.encryptForGCM(
+                payload.data(),
+                with: cek,
+                additionalAuthenticatedData: header.data().base64URLEncodedData()
+            )
+            
+            return EncryptionContext(
+                encryptedKey: encryptedKey,
+                ciphertext: symmetricContext.ciphertext,
+                authenticationTag: symmetricContext.authenticationTag,
+                initializationVector: symmetricContext.initializationVector
+            )
+        }
     }
 }

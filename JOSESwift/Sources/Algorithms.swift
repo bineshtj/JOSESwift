@@ -57,66 +57,80 @@ public enum AsymmetricKeyAlgorithm: String, CaseIterable {
 public enum SymmetricKeyAlgorithm: String {
     case A256CBCHS512 = "A256CBC-HS512"
     case A128CBCHS256 = "A128CBC-HS256"
-
+    case A128GCM = "A128GCM"
+    
     var hmacAlgorithm: HMACAlgorithm {
         switch self {
         case .A256CBCHS512:
             return .SHA512
         case .A128CBCHS256:
             return .SHA256
+        case .A128GCM:
+            return .SHA256 //irrelevant & incorrect
         }
     }
-
+    
     var keyLength: Int {
         switch self {
         case .A256CBCHS512:
             return 64
         case .A128CBCHS256:
             return 32
+        case .A128GCM:
+            return 16
         }
     }
-
+    
     var initializationVectorLength: Int {
         switch self {
         case .A256CBCHS512:
             return 16
         case .A128CBCHS256:
             return 16
+        case .A128GCM:
+            return 12
         }
     }
-
+    
     func checkKeyLength(for key: Data) -> Bool {
         switch self {
         case .A256CBCHS512:
             return key.count == 64
         case .A128CBCHS256:
             return key.count == 32
+        case .A128GCM:
+            return key.count == 16
         }
     }
-
+    
     func retrieveKeys(from inputKey: Data) throws -> (hmacKey: Data, encryptionKey: Data) {
         switch self {
         case .A256CBCHS512:
             guard checkKeyLength(for: inputKey) else {
                 throw JWEError.keyLengthNotSatisfied
             }
-
             return (inputKey.subdata(in: 0..<32), inputKey.subdata(in: 32..<64))
-
+            
         case .A128CBCHS256:
             guard checkKeyLength(for: inputKey) else {
                 throw JWEError.keyLengthNotSatisfied
             }
             return (inputKey.subdata(in: 0..<16), inputKey.subdata(in: 16..<32))
+            
+        case .A128GCM:
+            //same key is passed. There is no HMAC in this case.
+            return (inputKey.subdata(in: 0..<16), inputKey.subdata(in: 0..<16))
         }
     }
-
+    
     func authenticationTag(for hmac: Data) -> Data {
         switch self {
         case .A256CBCHS512:
             return hmac.subdata(in: 0..<32)
         case .A128CBCHS256:
             return hmac.subdata(in: 0..<16)
+        case .A128GCM:
+            return hmac.subdata(in: 0..<16) //TODO: verify
         }
     }
 }
