@@ -138,7 +138,7 @@ public struct Encrypter<KeyType> {
                 initializationVector: symmetricContext.initializationVector
             )
         } else {
-            let symmetricContext = try symmetric.encryptForGCM(
+            let symmetricContext = try symmetric.encrypt(
                 payload.data(),
                 with: cek,
                 additionalAuthenticatedData: header.data().base64URLEncodedData()
