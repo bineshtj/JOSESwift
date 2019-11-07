@@ -25,7 +25,7 @@ import Foundation
 
 /// A `SymmetricEncrypter` to encrypt plaintext with an `AES` algorithm.
 internal struct AESEncrypter: SymmetricEncrypter {
-    typealias KeyType = AES.KeyType
+    typealias KeyType = JoseAES.KeyType
 
     let algorithm: SymmetricKeyAlgorithm
     let symmetricKey: KeyType?
@@ -45,7 +45,7 @@ internal struct AESEncrypter: SymmetricEncrypter {
         let encryptionKey = keys.encryptionKey
 
         // Encrypt the plaintext with a symmetric encryption key, a symmetric encryption algorithm and an initialization vector.
-        let cipherText = try AES.encrypt(plaintext: plaintext, with: encryptionKey, using: algorithm, and: iv)
+        let cipherText = try JoseAES.encrypt(plaintext: plaintext, with: encryptionKey, using: algorithm, and: iv)
 
         // Put together the input data for the HMAC. It consists of A || IV || E || AL.
         var concatData = additionalAuthenticatedData
@@ -54,12 +54,43 @@ internal struct AESEncrypter: SymmetricEncrypter {
         concatData.append(additionalAuthenticatedData.getByteLengthAsOctetHexData())
 
         // Calculate the HMAC with the concatenated input data, the HMAC key and the HMAC algorithm.
-        let hmacOutput = HMAC.calculate(from: concatData, with: hmacKey, using: algorithm.hmacAlgorithm)
+        let hmacOutput = JoseHMAC.calculate(from: concatData, with: hmacKey, using: algorithm.hmacAlgorithm)
         let authenticationTag = algorithm.authenticationTag(for: hmacOutput)
 
         return SymmetricEncryptionContext(
             ciphertext: cipherText,
             authenticationTag: authenticationTag,
+            initializationVector: iv
+        )
+    }
+    
+    func encryptForGCM(_ plaintext: Data, with symmetricKey: Data, additionalAuthenticatedData: Data) throws -> SymmetricEncryptionContext {
+        // Generate random intitialization vector.
+        let iv = try SecureRandom.generate(count: algorithm.initializationVectorLength)
+        
+        // Get the encryption key.
+        let keys = try algorithm.retrieveKeys(from: symmetricKey)
+        let encryptionKey = keys.encryptionKey
+        
+        // Encrypt the plaintext with a symmetric encryption key, GCM symmetric encryption algorithm and an initialization vector.
+        let gcm = GCM(iv: iv.bytes, additionalAuthenticatedData: additionalAuthenticatedData.bytes)
+        let aes = try AES(key: encryptionKey.bytes, blockMode: gcm, padding: .noPadding)
+        let cipherText = try aes.encrypt(plaintext.bytes)
+        let tag = gcm.authenticationTag
+        
+        //        // Put together the input data for the HMAC. It consists of A || IV || E || AL.
+        //        var concatData = additionalAuthenticatedData
+        //        concatData.append(iv)
+        //        concatData.append(cipherText.data)
+        //        concatData.append(additionalAuthenticatedData.getByteLengthAsOctetHexData())
+        //
+        //        // Calculate the HMAC with the concatenated input data, the HMAC key and the HMAC algorithm.
+        //        let hmacOutput = try JoseHMAC.calculate(from: concatData, with: hmacKey, using: algorithm.hmacAlgorithm)
+        //        let authenticationTag = algorithm.authenticationTag(for: hmacOutput)
+        
+        return SymmetricEncryptionContext(
+            ciphertext: cipherText.data,
+            authenticationTag: tag!.data,
             initializationVector: iv
         )
     }

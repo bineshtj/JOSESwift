@@ -25,7 +25,7 @@ import Foundation
 
 /// A `SymmetricDecrypter` to decrypt a cipher text with an `AES` algorithm.
 internal struct AESDecrypter: SymmetricDecrypter {
-    typealias KeyType = AES.KeyType
+    typealias KeyType = JoseAES.KeyType
 
     let algorithm: SymmetricKeyAlgorithm
     let symmetricKey: KeyType?
@@ -53,14 +53,14 @@ internal struct AESDecrypter: SymmetricDecrypter {
         concatData.append(context.additionalAuthenticatedData.getByteLengthAsOctetHexData())
 
         // Calculate the HMAC for the concatenated input data and compare it with the reference authentication tag.
-        let hmacOutput = HMAC.calculate(from: concatData, with: hmacKey, using: algorithm.hmacAlgorithm)
+        let hmacOutput = JoseHMAC.calculate(from: concatData, with: hmacKey, using: algorithm.hmacAlgorithm)
 
         guard context.authenticationTag == algorithm.authenticationTag(for: hmacOutput) else {
             throw JWEError.hmacNotAuthenticated
         }
 
         // Decrypt the cipher text with a symmetric decryption key, a symmetric algorithm and the initialization vector, return the plaintext if no error occured.
-        let plaintext = try AES.decrypt(cipherText: context.ciphertext, with: decryptionKey, using: algorithm, and: context.initializationVector)
+        let plaintext = try JoseAES.decrypt(cipherText: context.ciphertext, with: decryptionKey, using: algorithm, and: context.initializationVector)
 
         return plaintext
     }

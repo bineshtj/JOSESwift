@@ -38,6 +38,9 @@ fileprivate extension SymmetricKeyAlgorithm {
 
         case .A128CBCHS256:
             return CCAlgorithm(kCCAlgorithmAES128)
+            
+        case .A128GCM:
+            return CCAlgorithm(kCCAlgorithmAES128)
         }
     }
 
@@ -48,11 +51,14 @@ fileprivate extension SymmetricKeyAlgorithm {
 
         case .A128CBCHS256:
             return key.count == kCCKeySizeAES128
+            
+        case .A128GCM:
+            return key.count == kCCKeySizeAES128
         }
     }
 }
 
-internal struct AES {
+internal struct JoseAES {
     typealias KeyType = Data
 
     /// Encrypts a plain text using a given `AES` algorithm, the corresponding symmetric key and an initialization vector.
@@ -78,6 +84,7 @@ internal struct AES {
             }
 
             return encrypted.data
+        case .A128GCM: fatalError("Not implemented. Refactor code.")
         }
     }
 
@@ -104,6 +111,8 @@ internal struct AES {
             }
 
             return decrypted.data
+        
+        case .A128GCM: fatalError("Not implemented. Refactor code.")
         }
     }
 

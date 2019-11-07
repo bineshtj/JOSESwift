@@ -56,13 +56,16 @@ public enum AsymmetricKeyAlgorithm: String, CaseIterable {
 public enum SymmetricKeyAlgorithm: String {
     case A256CBCHS512 = "A256CBC-HS512"
     case A128CBCHS256 = "A128CBC-HS256"
-
+    case A128GCM = "A128GCM"
+    
     var hmacAlgorithm: HMACAlgorithm {
         switch self {
         case .A256CBCHS512:
             return .SHA512
         case .A128CBCHS256:
             return .SHA256
+        case .A128GCM:
+            return .SHA256 //irrelevant & incorrect
         }
     }
 
@@ -72,6 +75,8 @@ public enum SymmetricKeyAlgorithm: String {
             return 64
         case .A128CBCHS256:
             return 32
+        case .A128GCM:
+            return 16
         }
     }
 
@@ -81,6 +86,8 @@ public enum SymmetricKeyAlgorithm: String {
             return 16
         case .A128CBCHS256:
             return 16
+        case .A128GCM:
+            return 12
         }
     }
 
@@ -90,6 +97,8 @@ public enum SymmetricKeyAlgorithm: String {
             return key.count == 64
         case .A128CBCHS256:
             return key.count == 32
+        case .A128GCM:
+            return key.count == 16
         }
     }
 
@@ -107,6 +116,10 @@ public enum SymmetricKeyAlgorithm: String {
                 throw JWEError.keyLengthNotSatisfied
             }
             return (inputKey.subdata(in: 0..<16), inputKey.subdata(in: 16..<32))
+            
+        case .A128GCM:
+            //same key is passed. There is no HMAC in this case.
+            return (inputKey.subdata(in: 0..<16), inputKey.subdata(in: 0..<16))
         }
     }
 
@@ -116,6 +129,8 @@ public enum SymmetricKeyAlgorithm: String {
             return hmac.subdata(in: 0..<32)
         case .A128CBCHS256:
             return hmac.subdata(in: 0..<16)
+        case .A128GCM:
+            return hmac.subdata(in: 0..<16) //TODO: verify
         }
     }
 }
