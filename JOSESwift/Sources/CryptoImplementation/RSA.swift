@@ -57,7 +57,7 @@ internal extension AsymmetricKeyAlgorithm {
             return .rsaEncryptionOAEPSHA1
         case .RSAOAEP256:
             return .rsaEncryptionOAEPSHA256
-        case .direct:
+        case .direct, .direct_ECDH_ES:
             return nil
         }
     }
@@ -87,7 +87,7 @@ internal extension AsymmetricKeyAlgorithm {
             // the hash length of SHA-256.
             let hLen = 256 / 8
             return (k - 2 * hLen - 2)
-        case .direct: return 0
+        case .direct, .direct_ECDH_ES: return 0
         }
     }
 }
@@ -104,7 +104,7 @@ fileprivate extension AsymmetricKeyAlgorithm {
         switch self {
         case .RSA1_5, .RSAOAEP, .RSAOAEP256:
             return mLen <= maxMessageLength(for: publicKey)
-        case .direct:
+        case .direct, .direct_ECDH_ES:
             return false
         }
     }
@@ -128,7 +128,7 @@ fileprivate extension AsymmetricKeyAlgorithm {
             // where k is the length in octets of the RSA modulus,
             // and k >= 2hLen + 2
             return cipherText.count == SecKeyGetBlockSize(privateKey)
-        case .direct:
+        case .direct, .direct_ECDH_ES:
             return false
         }
     }

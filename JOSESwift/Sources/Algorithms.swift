@@ -47,6 +47,7 @@ public enum AsymmetricKeyAlgorithm: String, CaseIterable {
     case RSAOAEP = "RSA-OAEP"
     case RSAOAEP256 = "RSA-OAEP-256"
     case direct = "dir"
+    case direct_ECDH_ES = "ECDH-ES"
 }
 
 /// An algorithm for symmetric encryption and decryption.

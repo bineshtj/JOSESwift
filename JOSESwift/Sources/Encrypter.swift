@@ -89,7 +89,7 @@ public struct Encrypter<KeyType> {
             // swiftlint:disable:next force_cast
             self.asymmetric = RSAEncrypter(algorithm: keyEncryptionAlgorithm, publicKey: (key as! RSAEncrypter.KeyType))
             self.symmetric = AESEncrypter(algorithm: contentEncyptionAlgorithm)
-        case (.direct, .A256CBCHS512), (.direct, .A128CBCHS256), (.direct, .A128GCM):
+        case (.direct, .A256CBCHS512), (.direct, .A128CBCHS256), (.direct, .A128GCM), (.direct_ECDH_ES, .A256CBCHS512), (.direct_ECDH_ES, .A128CBCHS256), (.direct_ECDH_ES, .A128GCM):
             guard type(of: key) is AESEncrypter.KeyType.Type else {
                 return nil
             }
